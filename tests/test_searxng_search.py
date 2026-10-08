@@ -1,4 +1,5 @@
 import importlib
+import importlib.util
 import sys
 import types
 from datetime import datetime
@@ -153,3 +154,13 @@ def test_search_failure_returns_empty_response(monkeypatch):
 
     response = module.SearXNGNewsAgency(base_url="http://nowhere").basic_search_news("测试")
     assert response.results == []
+
+
+@pytest.mark.parametrize("engine", ["QueryEngine", "MediaEngine", "InsightEngine", "ReportEngine"])
+def test_llm_response_strips_think_block(engine):
+    # 直接按文件加载，避免导入整个 Engine 包时触发配置校验
+    spec = importlib.util.spec_from_file_location(f"_{engine}_llm_base", PROJECT_ROOT / engine / "llms" / "base.py")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    raw = "<think>先想一想\n{不是答案}</think>\n{\"title\": \"答案\"}"
+    assert module.LLMClient.validate_response(raw) == "{\"title\": \"答案\"}"

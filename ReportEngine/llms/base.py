@@ -5,6 +5,7 @@ Report Engine 默认的OpenAI兼容LLM客户端封装。
 """
 
 import os
+import re
 import sys
 from typing import Any, Dict, Optional, Generator
 from loguru import logger
@@ -160,7 +161,7 @@ class LLMClient:
         
         # 拼接所有字节，然后一次性解码
         if byte_chunks:
-            return b''.join(byte_chunks).decode('utf-8', errors='replace')
+            return self.validate_response(b''.join(byte_chunks).decode('utf-8', errors='replace'))
         return ""
 
     @staticmethod
@@ -168,6 +169,8 @@ class LLMClient:
         """兜底处理None/空白字符串，防止上层逻辑崩溃"""
         if response is None:
             return ""
+        # 部分本地推理模型（如开启思考模式的 Qwen）会把 <think>...</think> 混入正文，去掉以免干扰 JSON 解析
+        response = re.sub(r"<think>.*?</think>", "", response, flags=re.DOTALL)
         return response.strip()
 
     def get_model_info(self) -> Dict[str, Any]:

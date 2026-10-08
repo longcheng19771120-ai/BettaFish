@@ -3,6 +3,7 @@ Unified OpenAI-compatible LLM client for the Query Engine, with retry support.
 """
 
 import os
+import re
 import sys
 from datetime import datetime
 from typing import Any, Dict, Optional, Generator
@@ -150,13 +151,15 @@ class LLMClient:
         
         # 拼接所有字节，然后一次性解码
         if byte_chunks:
-            return b''.join(byte_chunks).decode('utf-8', errors='replace')
+            return self.validate_response(b''.join(byte_chunks).decode('utf-8', errors='replace'))
         return ""
 
     @staticmethod
     def validate_response(response: Optional[str]) -> str:
         if response is None:
             return ""
+        # 部分本地推理模型（如开启思考模式的 Qwen）会把 <think>...</think> 混入正文，去掉以免干扰 JSON 解析
+        response = re.sub(r"<think>.*?</think>", "", response, flags=re.DOTALL)
         return response.strip()
 
     def get_model_info(self) -> Dict[str, Any]:

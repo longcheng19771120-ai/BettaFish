@@ -113,7 +113,7 @@ services:
     profiles: ["ollama"]
     environment:
       - OLLAMA_HOST=http://ollama:11434
-      - MODEL=${LOCAL_LLM_MODEL:-qwen2.5:14b}
+      - MODEL=${LOCAL_LLM_MODEL:-qwen3.8:27b}
     entrypoint: ["/bin/sh", "-c", "ollama pull \"$${MODEL}\""]
     depends_on:
       ollama:

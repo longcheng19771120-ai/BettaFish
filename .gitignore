@@ -348,6 +348,8 @@ test_results/
 OperationGuidance/
 
 db_data/
+# 本地化部署运行时数据（docker-compose.local.yml）
+/data/
 insight_engine_streamlit_reports/
 media_engine_streamlit_reports/
 query_engine_streamlit_reports/

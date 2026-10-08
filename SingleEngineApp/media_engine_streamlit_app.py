@@ -140,6 +140,18 @@ def main():
                 SEARCH_CONTENT_MAX_LENGTH=max_content_length,
                 OUTPUT_DIR="media_engine_streamlit_reports",
             )
+        elif settings.SEARCH_TOOL_TYPE == "SearXNG":
+            logger.info(f"使用本地SearXNG搜索: {settings.SEARXNG_BASE_URL}")
+            config = Settings(
+                MEDIA_ENGINE_API_KEY=engine_key,
+                MEDIA_ENGINE_BASE_URL=settings.MEDIA_ENGINE_BASE_URL,
+                MEDIA_ENGINE_MODEL_NAME=model_name,
+                SEARCH_TOOL_TYPE="SearXNG",
+                SEARXNG_BASE_URL=settings.SEARXNG_BASE_URL,
+                MAX_REFLECTIONS=max_reflections,
+                SEARCH_CONTENT_MAX_LENGTH=max_content_length,
+                OUTPUT_DIR="media_engine_streamlit_reports",
+            )
         else:
             st.error(f"未知的搜索工具类型: {settings.SEARCH_TOOL_TYPE}")
             logger.error(f"未知的搜索工具类型: {settings.SEARCH_TOOL_TYPE}")
@@ -158,7 +170,7 @@ def execute_research(query: str, config: Settings):
 
         # 初始化Agent
         status_text.text("正在初始化Agent...")
-        if config.SEARCH_TOOL_TYPE == "BochaAPI":
+        if config.SEARCH_TOOL_TYPE in ("BochaAPI", "SearXNG"):
             agent = DeepSearchAgent(config)
         elif config.SEARCH_TOOL_TYPE == "AnspireAPI":
             agent = AnspireSearchAgent(config)

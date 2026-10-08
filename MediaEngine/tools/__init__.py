@@ -13,10 +13,12 @@ from .search import (
     AnspireResponse,
     print_response_summary
 )
+from .searxng_search import SearXNGMultimodalSearch
 
 __all__ = [
     "BochaMultimodalSearch",
     "AnspireAISearch",
+    "SearXNGMultimodalSearch",
     "WebpageResult", 
     "ImageResult",
     "ModalCardResult",

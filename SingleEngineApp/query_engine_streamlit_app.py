@@ -98,7 +98,8 @@ def main():
         if not settings.QUERY_ENGINE_API_KEY:
             st.error("请在您的环境变量中设置QUERY_ENGINE_API_KEY")
             return
-        if not settings.TAVILY_API_KEY:
+        use_searxng = settings.SEARCH_TOOL_TYPE == "SearXNG"
+        if not use_searxng and not settings.TAVILY_API_KEY:
             st.error("请在您的环境变量中设置TAVILY_API_KEY")
             return
 
@@ -112,6 +113,8 @@ def main():
             QUERY_ENGINE_BASE_URL=settings.QUERY_ENGINE_BASE_URL,
             QUERY_ENGINE_MODEL_NAME=model_name,
             TAVILY_API_KEY=tavily_key,
+            SEARCH_TOOL_TYPE=settings.SEARCH_TOOL_TYPE,
+            SEARXNG_BASE_URL=settings.SEARXNG_BASE_URL,
             MAX_REFLECTIONS=max_reflections,
             SEARCH_CONTENT_MAX_LENGTH=max_content_length,
             OUTPUT_DIR="query_engine_streamlit_reports"

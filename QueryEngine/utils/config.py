@@ -9,7 +9,7 @@ Query Engine 配置管理模块
 from pathlib import Path
 from pydantic_settings import BaseSettings
 from pydantic import Field
-from typing import Optional
+from typing import Optional, Literal
 from loguru import logger
 
 
@@ -32,7 +32,9 @@ class Settings(BaseSettings):
     QUERY_ENGINE_PROVIDER: Optional[str] = Field(None, description="Query Engine LLM提供商（兼容字段）")
     
     # ================== 网络工具配置 ====================
-    TAVILY_API_KEY: str = Field(..., description="Tavily API（申请地址：https://www.tavily.com/）API密钥，用于Tavily网络搜索")
+    TAVILY_API_KEY: Optional[str] = Field(None, description="Tavily API（申请地址：https://www.tavily.com/）API密钥，用于Tavily网络搜索")
+    SEARCH_TOOL_TYPE: Literal["AnspireAPI", "BochaAPI", "SearXNG"] = Field("AnspireAPI", description="设为 SearXNG 时 Query Engine 改用本地 SearXNG 搜索，其余取值使用 Tavily")
+    SEARXNG_BASE_URL: Optional[str] = Field("http://localhost:8080", description="本地 SearXNG 实例地址")
     
     # ================== 搜索参数配置 ====================
     SEARCH_TIMEOUT: int = Field(240, description="搜索超时（秒）")
@@ -66,7 +68,10 @@ def print_config(config: Settings):
     message += "=== Query Engine 配置 ===\n"
     message += f"LLM 模型: {config.QUERY_ENGINE_MODEL_NAME}\n"
     message += f"LLM Base URL: {config.QUERY_ENGINE_BASE_URL or '(默认)'}\n"
-    message += f"Tavily API Key: {'已配置' if config.TAVILY_API_KEY else '未配置'}\n"
+    if config.SEARCH_TOOL_TYPE == "SearXNG":
+        message += f"搜索后端: SearXNG ({config.SEARXNG_BASE_URL})\n"
+    else:
+        message += f"Tavily API Key: {'已配置' if config.TAVILY_API_KEY else '未配置'}\n"
     message += f"搜索超时: {config.SEARCH_TIMEOUT} 秒\n"
     message += f"最长内容长度: {config.SEARCH_CONTENT_MAX_LENGTH}\n"
     message += f"最大反思次数: {config.MAX_REFLECTIONS}\n"

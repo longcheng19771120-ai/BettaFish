@@ -321,6 +321,17 @@ docker compose up -d
 
 完成上述所有配置并保存后，系统即可正常运行。
 
+### 3. 完全本地化部署（无需任何云端 API Key）
+
+使用本地 Ollama 大模型 + 自建 SearXNG 搜索 + PostgreSQL，一条命令启动全部服务：
+
+```bash
+cp .env.local.example .env
+docker compose -f docker-compose.local.yml up -d --build
+```
+
+详见 [本地化部署指南](./docs/local-deployment.md)。
+
 ## 🔧 源码启动指南
 
 > 如果你是初次学习一个Agent系统的搭建，可以从一个非常简单的demo开始：[Deep Search Agent Demo](https://github.com/666ghj/DeepSearchAgent-Demo)

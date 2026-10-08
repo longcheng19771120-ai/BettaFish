@@ -1,0 +1,45 @@
+# BettaFish 本地 SearXNG 配置（在官方默认配置基础上覆盖少量选项）
+# 文档：https://docs.searxng.org/admin/settings/index.html
+use_default_settings: true
+
+general:
+  instance_name: "BettaFish SearXNG"
+
+server:
+  # 实际密钥由 docker-compose 中的 SEARXNG_SECRET 环境变量覆盖
+  secret_key: "change-me-in-env"
+  # 仅供 BettaFish 内网调用，关闭限流，否则 Agent 高频请求会被拦截
+  limiter: false
+  image_proxy: false
+  public_instance: false
+
+search:
+  safe_search: 0
+  default_lang: "zh-CN"
+  # BettaFish 通过 JSON API 调用，必须开启 json
+  formats:
+    - html
+    - json
+
+outgoing:
+  request_timeout: 6.0
+  max_request_timeout: 15.0
+  # 如需通过代理访问外网搜索引擎，取消注释并修改：
+  # proxies:
+  #   all://:
+  #     - http://host.docker.internal:7890
+
+# 启用对中文舆情更友好的搜索源（默认配置中部分为禁用状态）
+engines:
+  - name: baidu
+    disabled: false
+  - name: 360search
+    disabled: false
+  - name: sogou
+    disabled: false
+  - name: bing
+    disabled: false
+  - name: bing news
+    disabled: false
+  - name: bing images
+    disabled: false

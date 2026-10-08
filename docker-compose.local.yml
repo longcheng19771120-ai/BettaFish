@@ -1,0 +1,121 @@
+# BettaFish 完全本地化部署
+#
+#   cp .env.local.example .env
+#   docker compose -f docker-compose.local.yml up -d --build
+#
+# 包含：BettaFish 主程序（从本地源码构建）、PostgreSQL、SearXNG（替代 Tavily/Bocha/Anspire）、
+#       Ollama（本地大模型，OpenAI 兼容接口）。详见 docs/local-deployment.md
+
+services:
+  bettafish:
+    build:
+      context: .
+      args:
+        PIP_INDEX_URL: ${PIP_INDEX_URL:-https://pypi.org/simple}
+    image: bettafish:local
+    container_name: bettafish
+    restart: unless-stopped
+    environment:
+      - PYTHONUNBUFFERED=1
+      - STREAMLIT_SERVER_ENABLE_FILE_WATCHER=false
+      # 国内网络可设为 https://hf-mirror.com，用于首次下载情感分析模型
+      - HF_ENDPOINT=${HF_ENDPOINT:-https://huggingface.co}
+    ports:
+      - "5000:5000"
+      - "8501:8501"
+      - "8502:8502"
+      - "8503:8503"
+    volumes:
+      - ./.env:/app/.env
+      - ./logs:/app/logs
+      - ./final_reports:/app/final_reports
+      - ./insight_engine_streamlit_reports:/app/insight_engine_streamlit_reports
+      - ./media_engine_streamlit_reports:/app/media_engine_streamlit_reports
+      - ./query_engine_streamlit_reports:/app/query_engine_streamlit_reports
+      - ./data/hf_cache:/root/.cache/huggingface
+    extra_hosts:
+      # 允许容器通过 host.docker.internal 访问宿主机上的 Ollama / vLLM 等服务
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      db:
+        condition: service_healthy
+      searxng:
+        condition: service_started
+      ollama:
+        condition: service_healthy
+        required: false
+
+  db:
+    image: postgres:15
+    container_name: bettafish-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER:-bettafish}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-bettafish}
+      POSTGRES_DB: ${DB_NAME:-bettafish}
+    ports:
+      - "${POSTGRES_PORT:-5444}:5432"
+    volumes:
+      - ./data/postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  searxng:
+    image: searxng/searxng:latest
+    container_name: bettafish-searxng
+    restart: unless-stopped
+    environment:
+      - SEARXNG_SECRET=${SEARXNG_SECRET:-please-change-this-secret}
+      # 默认监听 IPv6，部分未启用 IPv6 的机器（如部分 WSL/云主机）会启动失败
+      - GRANIAN_HOST=0.0.0.0
+    ports:
+      # 仅绑定本机，便于调试：浏览器打开 http://127.0.0.1:8888
+      - "127.0.0.1:${SEARXNG_PORT:-8888}:8080"
+    volumes:
+      - ./deploy/searxng/settings.yml:/etc/searxng/settings.yml:ro
+
+  # 本地大模型。若已在宿主机运行 Ollama / vLLM，可在 .env 中删除 COMPOSE_PROFILES=ollama，
+  # 并把各 *_BASE_URL 改为 http://host.docker.internal:11434/v1 等地址
+  ollama:
+    image: ollama/ollama:latest
+    container_name: bettafish-ollama
+    profiles: ["ollama"]
+    restart: unless-stopped
+    environment:
+      # Ollama 默认上下文很短，会截断报告生成等长提示词
+      - OLLAMA_CONTEXT_LENGTH=${OLLAMA_CONTEXT_LENGTH:-32768}
+      - OLLAMA_KEEP_ALIVE=24h
+    ports:
+      - "127.0.0.1:11434:11434"
+    volumes:
+      - ./data/ollama:/root/.ollama
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+    # NVIDIA GPU 加速（需安装 nvidia-container-toolkit），取消注释即可：
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: all
+    #           capabilities: [gpu]
+
+  # 一次性任务：首次启动时自动拉取 .env 中 LOCAL_LLM_MODEL 指定的模型
+  ollama-pull:
+    image: ollama/ollama:latest
+    container_name: bettafish-ollama-pull
+    profiles: ["ollama"]
+    environment:
+      - OLLAMA_HOST=http://ollama:11434
+      - MODEL=${LOCAL_LLM_MODEL:-qwen2.5:14b}
+    entrypoint: ["/bin/sh", "-c", "ollama pull \"$${MODEL}\""]
+    depends_on:
+      ollama:
+        condition: service_healthy
+    restart: "no"

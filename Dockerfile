@@ -57,7 +57,9 @@ WORKDIR /app
 
 # Install Python dependencies first to leverage Docker layer caching
 COPY requirements.txt ./
-RUN uv pip install --system -r requirements.txt
+# 可通过 --build-arg PIP_INDEX_URL=https://pypi.tuna.tsinghua.edu.cn/simple 使用国内镜像
+ARG PIP_INDEX_URL=https://pypi.org/simple
+RUN uv pip install --system --index-url "${PIP_INDEX_URL}" -r requirements.txt
 
 # Install Playwright browser binaries (system deps already handled above)
 RUN python -m playwright install chromium

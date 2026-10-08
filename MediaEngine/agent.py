@@ -19,7 +19,7 @@ from .nodes import (
     ReportFormattingNode
 )
 from .state import State
-from .tools import BochaMultimodalSearch, BochaResponse, AnspireAISearch, AnspireResponse
+from .tools import BochaMultimodalSearch, BochaResponse, AnspireAISearch, AnspireResponse, SearXNGMultimodalSearch
 from .utils import settings, Settings, format_search_results_for_prompt
 
 
@@ -39,7 +39,10 @@ class DeepSearchAgent:
         self.llm_client = self._initialize_llm()
         
         # 初始化搜索工具集
-        self.search_agency = BochaMultimodalSearch(api_key=(self.config.BOCHA_API_KEY or self.config.BOCHA_WEB_SEARCH_API_KEY))
+        if self.config.SEARCH_TOOL_TYPE == "SearXNG":
+            self.search_agency = SearXNGMultimodalSearch(base_url=self.config.SEARXNG_BASE_URL)
+        else:
+            self.search_agency = BochaMultimodalSearch(api_key=(self.config.BOCHA_API_KEY or self.config.BOCHA_WEB_SEARCH_API_KEY))
         
         # 初始化节点
         self._initialize_nodes()
@@ -52,7 +55,7 @@ class DeepSearchAgent:
         
         logger.info(f"Media Agent已初始化")
         logger.info(f"使用LLM: {self.llm_client.get_model_info()}")
-        logger.info(f"搜索工具集: BochaMultimodalSearch (支持5种多模态搜索工具)")
+        logger.info(f"搜索工具集: {type(self.search_agency).__name__} (支持5种多模态搜索工具)")
     
     def _initialize_llm(self) -> LLMClient:
         """初始化LLM客户端"""

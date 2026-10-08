@@ -10,9 +10,11 @@ from .search import (
     ImageResult,
     print_response_summary
 )
+from .searxng_search import SearXNGNewsAgency
 
 __all__ = [
     "TavilyNewsAgency", 
+    "SearXNGNewsAgency",
     "SearchResult", 
     "TavilyResponse", 
     "ImageResult",

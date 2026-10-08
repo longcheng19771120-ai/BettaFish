@@ -2114,11 +2114,12 @@
                         key: 'SEARCH_TOOL_TYPE',
                         label: '选择检索工具',
                         type: 'select',
-                        options: ['BochaAPI', 'AnspireAPI']
+                        options: ['BochaAPI', 'AnspireAPI', 'SearXNG']
                     },
                     { key: 'TAVILY_API_KEY', label: 'Tavily API Key', type: 'password' },
                     { key: 'BOCHA_WEB_SEARCH_API_KEY', label: 'Bocha API Key', type: 'password', condition: { key: 'SEARCH_TOOL_TYPE', value: 'BochaAPI' } },
-                    { key: 'ANSPIRE_API_KEY', label: 'Anspire API Key', type: 'password', condition: { key: 'SEARCH_TOOL_TYPE', value: 'AnspireAPI' } }
+                    { key: 'ANSPIRE_API_KEY', label: 'Anspire API Key', type: 'password', condition: { key: 'SEARCH_TOOL_TYPE', value: 'AnspireAPI' } },
+                    { key: 'SEARXNG_BASE_URL', label: 'SearXNG 地址', condition: { key: 'SEARCH_TOOL_TYPE', value: 'SearXNG' } }
                 ]
             }
         ];

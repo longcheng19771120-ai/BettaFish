@@ -44,6 +44,9 @@ class Settings(BaseSettings):
         None, description="Media Engine LLM模型名称"
     )
     MAX_CONTENT_LENGTH: int = Field(200000, description="最大内容长度")
+    REPORT_FORUM_LOG_MAX_CHARS: int = Field(
+        0, description="送入报告生成的论坛日志最大字符数，超出时只保留最新部分；0 表示不限制。本地小模型建议设为 30000 左右"
+    )
     OUTPUT_DIR: str = Field("final_reports", description="主输出目录")
     # 章节分块JSON会存储在该目录，便于溯源与断点续传
     CHAPTER_OUTPUT_DIR: str = Field(

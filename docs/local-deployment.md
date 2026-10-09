@@ -31,6 +31,8 @@ Apple 芯片的 Mac 建议在宿主机原生安装 Ollama，使用 `qwen3.8:27b-
 
 qwen3.8 默认开启思考模式：Ollama 会把思考内容单独返回，本项目也会去掉混进正文的 `<think>` 内容，所以不影响 JSON 解析，只是每次调用会慢一些。需要更快时，可以把 Keyword Optimizer、Forum Host 这类轻量角色换成更小的模型。
 
+**报告生成慢**：Report Agent 每写一个章节，都会把三份引擎报告和整段论坛讨论记录送进模型，论坛记录常有几十万字。本地模型读这么长的输入，单次调用可能要十几分钟，还可能超出上下文。`.env.local.example` 默认设置 `REPORT_FORUM_LOG_MAX_CHARS=30000`，只保留最新的 3 万字讨论；设为 0 则不限制。
+
 Report Agent 对模型能力要求最高。如果最终报告出现图表空白、段落异常，可以单独给 `REPORT_ENGINE_*` 配一个更强的模型（本地或云端都行）。
 
 磁盘：镜像约 10 GB（含 PyTorch 与 Chromium），加上模型文件。

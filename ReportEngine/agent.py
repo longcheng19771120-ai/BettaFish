@@ -448,6 +448,7 @@ class ReportAgent:
                 logger.warning(f"流式事件回调失败: {callback_error}")
 
         logger.info(f"开始生成报告 {report_id}: {query}")
+        forum_logs = self._truncate_forum_logs(forum_logs)
         logger.info(f"输入数据 - 报告数量: {len(reports)}, 论坛日志长度: {len(str(forum_logs))}")
         emit('stage', {'stage': 'agent_start', 'report_id': report_id, 'query': query})
 
@@ -775,6 +776,20 @@ class ReportAgent:
             emit('error', {'stage': 'agent_failed', 'message': str(e)})
             raise
     
+    def _truncate_forum_logs(self, forum_logs: Any) -> Any:
+        """论坛日志通常远长于三份引擎报告，且每个章节都会整体送入LLM。
+        按 REPORT_FORUM_LOG_MAX_CHARS 只保留最新部分，避免超出本地模型上下文、拖慢生成。"""
+        max_chars = getattr(self.config, "REPORT_FORUM_LOG_MAX_CHARS", 0) or 0
+        if max_chars <= 0 or not isinstance(forum_logs, str) or len(forum_logs) <= max_chars:
+            return forum_logs
+        logger.info(f"论坛日志 {len(forum_logs)} 字符超过上限 {max_chars}，仅保留最新部分")
+        tail = forum_logs[-max_chars:]
+        # 从下一个完整行开始，避免截断半条发言
+        newline = tail.find("\n")
+        if 0 <= newline < len(tail) - 1:
+            tail = tail[newline + 1:]
+        return "（以下为论坛讨论的最新部分，较早内容已省略）\n" + tail
+
     def _select_template(self, query: str, reports: List[Any], forum_logs: str, custom_template: str):
         """
         选择报告模板。
